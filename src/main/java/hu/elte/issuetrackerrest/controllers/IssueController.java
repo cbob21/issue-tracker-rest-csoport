@@ -1,7 +1,9 @@
 package hu.elte.issuetrackerrest.controllers;
 
 import hu.elte.issuetrackerrest.entities.Issue;
+import hu.elte.issuetrackerrest.entities.Message;
 import hu.elte.issuetrackerrest.repositories.IssueRepository;
+import hu.elte.issuetrackerrest.repositories.MessageRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,9 @@ public class IssueController {
     
     @Autowired
     private IssueRepository issueRepository;
+    
+    @Autowired
+    private MessageRepository messageRepository;
     
     @GetMapping("")
     public ResponseEntity<Iterable<Issue>> getAll() {
@@ -58,6 +63,26 @@ public class IssueController {
         if (OIssue.isPresent()) {
             issueRepository.deleteById(id);
             return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @GetMapping("/{id}/messages")
+    public ResponseEntity<Iterable<Message>> message(@PathVariable Integer id){
+        Optional<Issue> issue = issueRepository.findById(id);
+        if (issue.isPresent()) {
+            return ResponseEntity.ok(issue.get().getMessages());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @PostMapping("/{id}/messages")
+    public ResponseEntity<Iterable<Message>> insertMessage(@PathVariable Integer id,@RequestBody Message message){
+        Optional<Issue> oIssue = issueRepository.findById(id);
+        if (oIssue.isPresent()) {
+            Issue issue = oIssue.get();
+            message.setIssue(issue);
+            return ResponseEntity.ok(messageRepository.save(message));
         } else {
             return ResponseEntity.notFound().build();
         }
